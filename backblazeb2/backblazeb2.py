@@ -251,8 +251,7 @@ class BackBlazeB2(object):
     # If password is set, encrypt files, else nah
     def upload_file(self, path, password=None, bucket_id=None, bucket_name=None,
                     thread_upload_url=None,
-                    thread_upload_authorization_token=None):
-
+                    thread_upload_authorization_token=None, dest_filename=None):
         self._authorize_account()
 
         if password:
@@ -288,7 +287,13 @@ class BackBlazeB2(object):
             cur_upload_url = url['uploadUrl']
             cur_upload_authorization_token = url['authorizationToken']
 
+        import mimetypes
+        mtype = mimetypes.guess_type(path)[0]
+        if mtype is None:
+        	mtype = 'application/octet-stream'
         # fixup filename
+        if dest_filename is not None:
+            path = dest_filename
         filename = re.sub('\\\\', '/',
                           path)  # Make sure Windows paths are converted.
         filename = re.sub('^/', '', filename)
@@ -301,7 +306,7 @@ class BackBlazeB2(object):
         headers = {
             'Authorization': cur_upload_authorization_token,
             'X-Bz-File-Name': filename,
-            'Content-Type': 'application/octet-stream',
+            'Content-Type': mtype,
             # 'Content-Type' : 'b2/x-auto',
             'X-Bz-Content-Sha1': sha
         }
